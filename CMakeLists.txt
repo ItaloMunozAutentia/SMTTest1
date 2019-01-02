@@ -1,0 +1,7 @@
+cmake_minimum_required (VERSION 2.6)
+project (SMTTest1)
+include_directories(.)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -ggdb")
+find_package(Threads REQUIRED)
+add_executable(SMTTest1 SMTTest1.cpp FileProcessor.cpp)
+target_link_libraries (SMTTest1 ${CMAKE_THREAD_LIBS_INIT})
