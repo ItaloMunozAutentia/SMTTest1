@@ -10,6 +10,7 @@
 
 // c++ headers
 #include <chrono>
+#include <functional>
 #include <map>
 #include <utility>
 
@@ -18,19 +19,19 @@
 
 // project headers
 #include <FileProcessor.h>
+#include <MeasureElapsedTime.h>
 #include <SMTTest1.h>
 #include <ThreadPool.h>
 
 /* DECLARATIONS **************************************************************/
 
-void InsertionSort(const char charToInsert, ArrayOfChars_t& arrayToInsertTo);
-void MergeSort(const char charToInsert, ArrayOfChars_t& arrayToInsertTo);
-void QuickSort(const char charToInsert, ArrayOfChars_t& arrayToInsertTo);
+void NonMemberSortFunctionExample(ArrayOfChars_t& arrayToInsertTo);
 
 /* CLASS IMPLEMENTATION ******************************************************/
 
 FileProcessor::FileProcessor(const std::string& inPath, const std::string& sortAlgorithm, const std::string& outPath)
 	: m_inStream(inPath)
+	, m_sortAlgorithm(sortAlgorithm)
 	, m_outStream(outPath)
 {
 	if (!m_inStream.is_open())
@@ -43,18 +44,21 @@ FileProcessor::FileProcessor(const std::string& inPath, const std::string& sortA
 		throw std::invalid_argument("can't write file: <" + outPath + ">");
 	}
 
-	// select sort algorithm from param
-	SortMethod_t sortMethods =
+	// select sort algorithm
+	using namespace std::placeholders;
+	m_sortCommand =
 	{
-		  { "insertion", InsertionSort }
-		, { "merge", MergeSort }
-		, { "quick", QuickSort }
+		  { "insertion", std::bind(&FileProcessor::InsertionSort, this, _1) }
+		, { "merge", std::bind(&FileProcessor::MergeSort, this, _1) }
+		, { "quick", std::bind(&FileProcessor::QuickSort, this, _1) }
+		, { "wwww", std::bind(NonMemberSortFunctionExample,  _1) }
 	};
-	m_sortAlgorithm = sortMethods.find(sortAlgorithm);
-	if (m_sortAlgorithm == sortMethods.end())
+	m_selectedSort = m_sortCommand.find(m_sortAlgorithm);
+	if (m_selectedSort == m_sortCommand.end())
 	{
-		m_sortAlgorithm = sortMethods.begin();
+		m_selectedSort = m_sortCommand.begin();
 	}
+
 }
 
 FileProcessor::~FileProcessor()
@@ -72,7 +76,12 @@ void FileProcessor::Run()
 		(
 			[this, item, lineNumber]()
 			{
-				ProcessItem(std::move(item), lineNumber);
+				using uSEC = std::chrono::microseconds;
+				auto usec = MeasureElapsedTime<uSEC>::Execution
+				(
+					std::bind(&FileProcessor::ProcessItem, this, std::move(item), lineNumber)
+				);
+				DEBUG_LOG << m_sortAlgorithm << " sort took " << usec/1000.0 << " ms" << std::endl;
 			}
 		);
 	}
@@ -80,29 +89,23 @@ void FileProcessor::Run()
 	DEBUG_LOG << "the end" << std::endl;
 }
 
-void FileProcessor::ProcessItem(const std::string& item, size_t lineNumber)
+int FileProcessor::ProcessItem(const std::string& item, size_t lineNumber)
 {
 	DEBUG_LOG << " processing line " << lineNumber << std::endl;
 
 	// execute sort
-	using steady = std::chrono::steady_clock;
-	auto start = steady::now();
 	ArrayOfChars_t sortedItem;
 	for (auto& singleItem : item)
 	{
 		if (CanCharBeAdded(singleItem))
-			m_sortAlgorithm->second(singleItem, sortedItem);
+		{
+			sortedItem.push_back(singleItem);
+			m_selectedSort->second(sortedItem);
+		}
 	}
 
-	// compute duration
-	auto finish = steady::now();
-	using ms = std::chrono::milliseconds;
-	auto elapsed = std::chrono::duration_cast<ms>(finish - start);
-	DEBUG_LOG << m_sortAlgorithm->first << "Sort took "
-		<< elapsed.count() << " ms "
-		<< "to sort" << std::endl;
-
 	StoreSortedItem(sortedItem);
+	return 0;
 }
 
 bool FileProcessor::CanCharBeAdded(const char& character)
@@ -137,9 +140,8 @@ void FileProcessor::StoreSortedItem(const ArrayOfChars_t& sortedItem, const std:
 	m_outStream.flush();
 }
 
-void InsertionSort(const char charToInsert, ArrayOfChars_t& arrayToInsertTo)
+void FileProcessor::InsertionSort(ArrayOfChars_t& arrayToInsertTo)
 {
-	arrayToInsertTo.push_back(charToInsert);
 	for (size_t i = 0 ; i < arrayToInsertTo.size(); ++i)
 	{
 		size_t indexOfMin = i;
@@ -158,14 +160,31 @@ void InsertionSort(const char charToInsert, ArrayOfChars_t& arrayToInsertTo)
 	}
 }
 
-void MergeSort(const char charToInsert, ArrayOfChars_t& arrayToInsertTo)
+void FileProcessor::MergeSort(ArrayOfChars_t& arrayToInsertTo)
 {
-	arrayToInsertTo.push_back(charToInsert);
-	void MergeSort(ArrayOfChars_t& arrayToSort, int left, int right);
-	MergeSort(arrayToInsertTo, 0, arrayToInsertTo.size() - 1);
+	MergeSortMain(arrayToInsertTo, 0, arrayToInsertTo.size() - 1);
 }
 
-void Merge(ArrayOfChars_t& arrayToSort, int left, int mid, int right)
+void FileProcessor::QuickSort(ArrayOfChars_t& arrayToInsertTo)
+{
+	QuickSortMain(arrayToInsertTo, 0, arrayToInsertTo.size() - 1);
+}
+
+/* CLASS PRIVATE'S IMPLEMENTATION ********************************************/
+
+// Sort arrayToSort[] between [left,right]
+void FileProcessor::MergeSortMain(ArrayOfChars_t& arrayToSort, int left, int right)
+{
+	if (left < right)
+	{
+		int mid = left+(right-left)/2;
+		MergeSortMain(arrayToSort, left, mid);
+		MergeSortMain(arrayToSort, mid + 1, right);
+		Merge(arrayToSort, left, mid, right);
+	}
+}
+
+void FileProcessor::Merge(ArrayOfChars_t& arrayToSort, int left, int mid, int right)
 {
 	int i, j, k;
 	int n1 = mid - left + 1;
@@ -207,48 +226,37 @@ void Merge(ArrayOfChars_t& arrayToSort, int left, int mid, int right)
 }
 
 // Sort arrayToSort[] between [left,right]
-void MergeSort(ArrayOfChars_t& arrayToSort, int left, int right)
+void FileProcessor::QuickSortMain(ArrayOfChars_t& arrayToSort, int left, int right)
 {
 	if (left < right)
 	{
-		int mid = left+(right-left)/2;
-		MergeSort(arrayToSort, left, mid);
-		MergeSort(arrayToSort, mid + 1, right);
-		Merge(arrayToSort, left, mid, right);
+		int pivot = QuickSortPartition(arrayToSort, left, right);
+		QuickSortMain(arrayToSort, left, pivot - 1);
+		QuickSortMain(arrayToSort, pivot + 1, right);
 	}
 }
 
-void QuickSort(const char charToInsert, ArrayOfChars_t& arrayToInsertTo)
+int FileProcessor::QuickSortPartition (ArrayOfChars_t& arrayToSort, int left, int right)
 {
-	arrayToInsertTo.push_back(charToInsert);
-	void QuickSort(ArrayOfChars_t& arr, int left, int right);
-	QuickSort(arrayToInsertTo, 0, arrayToInsertTo.size() - 1);
-}
-
-int QuickSortPartition (ArrayOfChars_t& arr, int left, int right)
-{
-	int pivot = arr[right]; // TODO: choose random?
+	int pivot = arrayToSort[right]; // TODO: choose random?
 	int i = (left - 1);
 	for (int j = left; j <= right- 1; j++)
 	{
-		if (arr[j] <= pivot)
+		if (arrayToSort[j] <= pivot)
 		{
 			i++;
-			std::swap(arr[i], arr[j]);
+			std::swap(arrayToSort[i], arrayToSort[j]);
 		}
 	}
 
-	std::swap(arr[i + 1], arr[right]);
+	std::swap(arrayToSort[i + 1], arrayToSort[right]);
 	return (i + 1);
 }
 
-void QuickSort(ArrayOfChars_t& arr, int left, int right)
+void NonMemberSortFunctionExample(ArrayOfChars_t& arrayToInsertTo)
 {
-	if (left < right)
-	{
-		int pivot = QuickSortPartition(arr, left, right);
-		QuickSort(arr, left, pivot - 1);
-		QuickSort(arr, pivot + 1, right);
-	}
+	std::string error(std::string(__FUNCTION__) + "() not implemented yet");
+	ERROR_LOG << error << std::endl;
+	throw std::invalid_argument(error);
 }
 

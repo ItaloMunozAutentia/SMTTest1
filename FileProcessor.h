@@ -11,6 +11,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <fstream>
+#include <functional>
 #include <map>
 #include <mutex>
 #include <stdexcept>
@@ -20,8 +21,8 @@
 /* DECLARATIONS **************************************************************/
 
 typedef std::vector<char> ArrayOfChars_t;
-typedef void (*InsertAndSortFx_t)(const char charToInsert, ArrayOfChars_t& arrayToInsertTo);
-typedef std::map<std::string, InsertAndSortFx_t> SortMethod_t;
+typedef std::function<void(ArrayOfChars_t& arrayToInsertTo)> SortFx_t;
+typedef std::map<std::string, SortFx_t> SortCommand_t;
 
 /* CLASS DECLARATION *********************************************************/
 
@@ -51,7 +52,7 @@ protected:
 	 * @brief TODO
 	 *
 	 */
-	void ProcessItem(const std::string& item, size_t lineNumber);
+	int ProcessItem(const std::string& item, size_t lineNumber);
 
 	/**
 	 * @brief TODO
@@ -65,10 +66,43 @@ protected:
 	 */
 	void StoreSortedItem(const ArrayOfChars_t& sortedItem, const std::string fieldSeparator = ",");
 
-private:
-	std::ifstream           m_inStream;
-	std::ofstream           m_outStream;
-	SortMethod_t::iterator  m_sortAlgorithm;
-	std::mutex              m_fileWriterMutex;
+	/**
+	 * @brief TODO
+	 *
+	 */
+	void InsertionSort(ArrayOfChars_t& arrayToInsertTo);
 
+	/**
+	 * @brief TODO
+	 *
+	 */
+	void MergeSort(ArrayOfChars_t& arrayToInsertTo);
+
+	/**
+	 * @brief TODO
+	 *
+	 */
+	void QuickSort(ArrayOfChars_t& arrayToInsertTo);
+
+private:
+	/**
+	 * @brief MergeSort internal stuff
+	 *
+	 */
+	void MergeSortMain(ArrayOfChars_t& arrayToSort, int left, int right);
+	void Merge(ArrayOfChars_t& arrayToSort, int left, int mid, int right);
+
+	/**
+	 * @brief QuickSort  internal stuff
+	 *
+	 */
+	void QuickSortMain(ArrayOfChars_t& arrayToSort, int left, int right);
+	int  QuickSortPartition (ArrayOfChars_t& arrayToSort, int left, int right);
+
+	std::ifstream            m_inStream;
+	std::string              m_sortAlgorithm;
+	SortCommand_t            m_sortCommand;
+	SortCommand_t::iterator  m_selectedSort;
+	std::ofstream            m_outStream;
+	std::mutex               m_fileWriterMutex;
 };

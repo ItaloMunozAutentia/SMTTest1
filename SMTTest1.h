@@ -15,7 +15,7 @@
 
 /* DEFINES *******************************************************************/
 
-#define INFO_LOG     std::cerr << std::endl << std::this_thread::get_id() << " "
+#define INFO_LOG     std::cout << std::endl << std::this_thread::get_id() << " "
 #define WARNING_LOG  std::cerr << std::endl << std::this_thread::get_id() << " "
 #define ERROR_LOG    std::cerr << std::endl << std::this_thread::get_id() << " "
 #define DEBUG_LOG    std::cerr << std::endl << std::this_thread::get_id() << " "
