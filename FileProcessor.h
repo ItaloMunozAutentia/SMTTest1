@@ -20,7 +20,8 @@
 
 /* DECLARATIONS **************************************************************/
 
-typedef std::vector<char> ArrayOfChars_t;
+template <typename T> using ArrayOf_t = std::vector<T>;
+typedef ArrayOf_t<char> ArrayOfChars_t;
 typedef std::function<void(ArrayOfChars_t& arrayToInsertTo)> SortFx_t;
 typedef std::map<std::string, SortFx_t> SortCommand_t;
 
