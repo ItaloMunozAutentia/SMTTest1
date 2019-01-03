@@ -56,7 +56,7 @@ FileProcessor::FileProcessor(const std::string& inPath, const std::string& sortA
 	m_selectedSort = m_sortCommand.find(m_sortAlgorithm);
 	if (m_selectedSort == m_sortCommand.end())
 	{
-		m_selectedSort = m_sortCommand.begin();
+		throw std::invalid_argument("unsupported sort algorithm: <" + m_sortAlgorithm + ">");
 	}
 
 }
