@@ -20,3 +20,13 @@
 <br>
 (3) Good but not the best solution in terms of performance (time complexity), good in terms of memory (space complexity). But much easier to follow than (2).
 
+### Features of the code
+* Object oriented programming.
+* Clean code.
+* Meets the requirements.
+* All sort methods (Insertion,Merge,Quick) are based on abstract class SortAlgorithm.
+* SortAlgorithm::Sort() is implemented as a "virtual template".
+* SortAlgorithm::Sort() sorts a VectorOf<datatype-here> (anything std::vector<> can hold).
+* Sort algorithm executed is obtained from a factory, so, an instance of Insert|Merge|QuickSort is dynamically creating according to user's command line.
+* Due to the factory, other sort algorithms can be implemented in the future, without affecting other portions of the code.
+* Multithreading

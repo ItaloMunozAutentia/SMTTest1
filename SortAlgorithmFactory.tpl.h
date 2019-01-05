@@ -12,6 +12,7 @@
 #include <InsertionSort.h>
 #include <MergeSort.h>
 #include <QuickSort.h>
+#include <Utils.h>
 
 /* TEMPLATE IMPLEMENTATION ***************************************************/
 
@@ -28,17 +29,17 @@ SortAlgorithmFactory<T>::~SortAlgorithmFactory()
 template <typename T>
 SortAlgorithmPtr<T> SortAlgorithmFactory<T>::SortUsing(const std::string& sortAlgorithmName)
 {
-	if (sortAlgorithmName == "InsertionSort")
+	if (Utils::StringCaseCmp(sortAlgorithmName, "InsertionSort") == 0)
 	{
 		return std::make_unique<InsertionSort<T>>();
 	}
 
-	if (sortAlgorithmName == "MergeSort")
+	if (Utils::StringCaseCmp(sortAlgorithmName, "MergeSort") == 0)
 	{
 		return std::make_unique<MergeSort<T>>();
 	}
 
-	if (sortAlgorithmName == "QuickSort")
+	if (Utils::StringCaseCmp(sortAlgorithmName, "QuickSort") == 0)
 	{
 		return std::make_unique<QuickSort<T>>();
 	}
