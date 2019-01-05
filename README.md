@@ -7,7 +7,7 @@
 
 
 ### Run
-./SMTTest1 \<inPath\> \<outPath\> \<sortAlgorithm:{insertion, merge, or quick}\>
+./SMTTest1 \<inPath\> \<outPath\> \<sortAlgorithm:{InsertionSort, MergeSort, QuickSort}\>
 
 ### Why such sort algorithms
 * InsertionSort: Because it's one of the simplest. Easy to follow.(1)

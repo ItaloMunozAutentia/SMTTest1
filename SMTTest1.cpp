@@ -8,13 +8,6 @@
 
 /* INCLUDES ******************************************************************/
 
-// c++ headers
-#include <functional>
-#include <iostream>
-#include <stdexcept>
-#include <string>
-
-// project headers
 #include <FileProcessor.h>
 #include <MeasureElapsedTime.h>
 #include <SMTTest1.h>
@@ -31,7 +24,7 @@ int main(int argc, char** argv)
 	{
 		if (argc != 4)
 		{
-			throw std::invalid_argument("Usage: " + std::string(argv[0]) + " inPath outPath sortAlgorithm:{insertion(default), merge, or quick}");
+			throw std::invalid_argument("Usage: " + std::string(argv[0]) + " inPath outPath sortAlgorithm:{InsertionSort, MergeSort, QuickSort}");
 		}
 
 		auto elapsed = MeasureElapsedTime<>::Execution(Main, argv);

@@ -10,20 +10,12 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <fstream>
-#include <functional>
-#include <map>
-#include <mutex>
-#include <stdexcept>
-#include <string>
-#include <vector>
+#include <CommonIncludes.h>
+#include <SortAlgorithmFactory.h>
 
 /* DECLARATIONS **************************************************************/
 
-template <typename T> using ArrayOf_t = std::vector<T>;
-typedef ArrayOf_t<char> ArrayOfChars_t;
-typedef std::function<void(ArrayOfChars_t& arrayToInsertTo)> SortFx_t;
-typedef std::map<std::string, SortFx_t> SortCommand_t;
+typedef VectorOf<char> Item;
 
 /* CLASS DECLARATION *********************************************************/
 
@@ -65,45 +57,12 @@ protected:
 	 * @brief TODO
 	 *
 	 */
-	void StoreSortedItem(const ArrayOfChars_t& sortedItem, const std::string fieldSeparator = ",");
-
-	/**
-	 * @brief TODO
-	 *
-	 */
-	void InsertionSort(ArrayOfChars_t& arrayToInsertTo);
-
-	/**
-	 * @brief TODO
-	 *
-	 */
-	void MergeSort(ArrayOfChars_t& arrayToInsertTo);
-
-	/**
-	 * @brief TODO
-	 *
-	 */
-	void QuickSort(ArrayOfChars_t& arrayToInsertTo);
+	void StoreSortedItem(const Item& sortedItem, const std::string fieldSeparator = ",");
 
 private:
-	/**
-	 * @brief MergeSort internal stuff
-	 *
-	 */
-	void MergeSortMain(ArrayOfChars_t& arrayToSort, int left, int right);
-	void Merge(ArrayOfChars_t& arrayToSort, int left, int mid, int right);
-
-	/**
-	 * @brief QuickSort  internal stuff
-	 *
-	 */
-	void QuickSortMain(ArrayOfChars_t& arrayToSort, int left, int right);
-	int  QuickSortPartition (ArrayOfChars_t& arrayToSort, int left, int right);
-
 	std::ifstream            m_inStream;
-	std::string              m_sortAlgorithm;
-	SortCommand_t            m_sortCommand;
-	SortCommand_t::iterator  m_selectedSort;
+	std::string              m_sortAlgorithmName;
+	SortAlgorithmPtr<char>   m_sortAlgorithm;
 	std::ofstream            m_outStream;
 	std::mutex               m_fileWriterMutex;
 };
